@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 
-mongoose.connect("mongodb+srv://vinaypandey46158:pandey557@cluster0.vceuh.mongodb.net/todo")
+mongoose.connect("mongodb://admin:admin@localhost:27017/")
 
 const Schema = mongoose.Schema;
 
@@ -19,6 +19,7 @@ const UserSchema = new Schema({
 const TodoSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: "User"},
     title: String,
+    description: String,
     done: Boolean
 })
 

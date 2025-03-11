@@ -13,10 +13,9 @@ app.use(express.json());
 app.use(cors());
 
 
-console.log(JWT_SECRET);
 
 const signupBody = zod.object({
-    username: zod.string(),
+    username: zod.string().email(),
     password: zod.string(),
 })
 app.post("/signup", async (req, res) => {
@@ -27,12 +26,14 @@ app.post("/signup", async (req, res) => {
             message: "Invalid Input"
         })
     }
-    await User.create({
+    const user = await User.create({
         username: req.body.username,
         password: req.body.password,
     });
+    const token = jwt.sign({ username: user.username}, JWT_SECRET, {expiresIn: "1h"});
     res.json({
-        message: "You are Signed up"
+        message: "You are Signed up",
+        token
     })
 })
 
@@ -72,6 +73,7 @@ const createTodo = zod.object({
     title: zod.string().min(1, "Title is required"),
 })
 app.post("/todo",auth,async (req, res) => {
+    console.log("User Id from auth middleware", req.user._id);
    const createPayload = req.body;
    const parsedPayload = createTodo.safeParse(createPayload);
 
@@ -81,24 +83,28 @@ app.post("/todo",auth,async (req, res) => {
       })
       return
    }
-   await Todo.create({
+   const todo = await Todo.create({
     title: createPayload.title,
     description: createPayload.description,
-    done: false
+    done: false,
+    userId: req.user._id
    })
    res.json({
-    message: "Todo created"
+    message: "Todo created",
+    todo
    })
 })
 
 
-
-app.get("/todos", async (req, res) => {
-  
+app.get("/todos",auth, async (req, res) => {
+   const userId = req.user._id;
+    const todos = await Todo.find({
+        userId
+     })
+    console.log(todos);
     res.json({
-        todos: []
+        todos
     })
-    
 })
 
 const updateTodo = zod.object({
@@ -125,6 +131,6 @@ app.put("/completed", async (req, res) => {
     })
 })
 
-app.listen(3000, () => {
+app.listen(5000, () => {
    console.log("server is Running successfully");
 })
